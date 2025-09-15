@@ -38,9 +38,8 @@ export default function Nav() {
         </button>
       </div>
       {open && (
-        <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-40" onClick={()=>setOpen(false)} />
-          <div ref={panelRef} className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md card p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xl" onClick={()=>setOpen(false)}>
+          <div ref={panelRef} className="w-[90vw] max-w-md card p-4" onClick={(e)=>e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <div className="font-medium">Postavke</div>
               <button className="btn btn-outline px-2 py-1" onClick={()=>setOpen(false)} aria-label="Close">
@@ -77,7 +76,7 @@ export default function Nav() {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </nav>
   );

@@ -92,11 +92,6 @@ export default function InvoicesIndex() {
                 {inv.issueDate}
                 {inv.dueDate ? <> - {inv.dueDate} {diff !== null ? <span className={`ml-2 text-xs font-semibold ${Number(diff) >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>({Math.abs(Number(diff))})</span> : null}</> : null}
               </div>
-              <div className="mt-2 flex gap-3">
-                <Link href={`/invoices/${inv.id}`} className="btn btn-success">{t('open')}</Link>
-                <Link href={`/invoices/${inv.id}/edit`} className="btn btn-pink">{t('edit')}</Link>
-                <button className="btn btn-danger" onClick={()=>{ if (confirm(t('confirm_delete_invoice'))) removeInvoice(inv.id); }}>{t('delete')}</button>
-              </div>
             </div>
             <div className="flex gap-3 justify-end items-center">
               <div className={`text-lg font-semibold ${inv.paid ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>{total} EUR</div>
@@ -104,6 +99,11 @@ export default function InvoicesIndex() {
                 className={"btn " + (inv.paid ? 'btn-success' : 'btn-primary')}
                 onClick={()=> updateInvoice({ ...inv, paid: !inv.paid, paidDate: !inv.paid ? new Date().toISOString().slice(0,10) : undefined })}
               >{inv.paid ? t('mark_unpaid') : t('mark_paid')}</button>
+            </div>
+            <div className="md:col-span-4 mt-2 flex gap-3">
+              <Link href={`/invoices/${inv.id}`} className="btn btn-success">{t('open')}</Link>
+              <Link href={`/invoices/${inv.id}/edit`} className="btn btn-pink">{t('edit')}</Link>
+              <button className="btn btn-danger" onClick={()=>{ if (confirm(t('confirm_delete_invoice'))) removeInvoice(inv.id); }}>{t('delete')}</button>
             </div>
           </li>
         );})}
