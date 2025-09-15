@@ -5,7 +5,7 @@ import { useStore } from "@/store/useStore";
 
 export default function Nav() {
   const { t, lang, setLang } = useI18n();
-  const { theme, setTheme } = useStore();
+  const { theme, setTheme, companies, activeCompanyId, setActiveCompany } = useStore();
   return (
     <nav className="p-4 flex gap-4 text-sm items-center">
       <Link href="/" className="font-semibold tracking-tight text-white">Invoice<span className="text-[var(--accent-400)]">maker</span></Link>
@@ -13,7 +13,11 @@ export default function Nav() {
       <Link href="/clients" className="hover:underline text-[var(--subtle)] hover:text-white">{t('nav_clients')}</Link>
       <Link href="/stats" className="hover:underline text-[var(--subtle)] hover:text-white">{t('nav_stats')}</Link>
       <Link href="/settings" className="hover:underline text-[var(--subtle)] hover:text-white ml-auto">{t('nav_settings')}</Link>
-      <select value={lang} onChange={(e)=>setLang(e.target.value as 'bs'|'en'|'nl'|'sk')} className="ml-4 input w-auto">
+      <select value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)} className="ml-auto input w-auto">
+        {companies.length === 0 ? <option value="">No company</option> : null}
+        {companies.map(c => <option key={c.id} value={c.id}>{c.profile.name}</option>)}
+      </select>
+      <select value={lang} onChange={(e)=>setLang(e.target.value as 'bs'|'en'|'nl'|'sk')} className="ml-2 input w-auto">
         <option value="bs">BS</option>
         <option value="en">EN</option>
         <option value="nl">NL</option>

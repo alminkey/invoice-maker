@@ -9,7 +9,7 @@ import { useI18n } from '@/lib/i18n';
 export default function NewInvoicePage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { clients, addInvoice, profile, numbering, setNumbering } = useStore();
+  const { clients, addInvoice, profile, numbering, setNumbering, companies, activeCompanyId, setActiveCompany } = useStore();
   const [clientId, setClientId] = useState("");
   const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0,10));
   const [dueDate, setDueDate] = useState<string>("");
@@ -85,6 +85,12 @@ export default function NewInvoicePage() {
           <select className="input" value={clientId} onChange={(e)=>setClientId(e.target.value)}>
             <option value="">-- Odaberite klijenta --</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm text-[var(--subtle)] mb-1">Kompanija</label>
+          <select className="input" value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)}>
+            {companies.map(c=> <option key={c.id} value={c.id}>{c.profile.name}</option>)}
           </select>
         </div>
         <div className="grid grid-cols-2 gap-2">

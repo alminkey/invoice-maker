@@ -18,6 +18,14 @@ export interface CompanyProfile {
   nextInvoice?: number;   // serial part, e.g. 1
 }
 
+export interface Company {
+  id: string;
+  profile: CompanyProfile;
+  numbering: { prefix: string; next: number; lastYear?: number; resetYearly?: boolean };
+  clients: Client[];
+  invoices: Invoice[];
+}
+
 export interface Client {
   id: string;
   name: string;

@@ -6,7 +6,7 @@ import { useI18n } from '@/lib/i18n';
 
 export default function StatsPage() {
   const { t } = useI18n();
-  const { invoices, clients } = useStore();
+  const { invoices, clients, companies, activeCompanyId, setActiveCompany } = useStore();
   const totals = useMemo(() => {
     const byClient: Record<string, number> = {};
     for (const inv of invoices) {
@@ -20,7 +20,12 @@ export default function StatsPage() {
 
   return (
     <main className="max-w-3xl mx-auto p-6 md:p-10">
-      <h1 className="text-2xl font-semibold mb-6">{t('stats_title')}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">{t('stats_title')}</h1>
+        <select className="input w-auto" value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)}>
+          {companies.map(c=> <option key={c.id} value={c.id}>{c.profile.name}</option>)}
+        </select>
+      </div>
       <div className="grid md:grid-cols-3 gap-4 mb-6">
         <div className="card p-4"><div className="text-sm text-[var(--subtle)]">{t('invoices_title')}</div><div className="text-2xl">{invoices.length}</div></div>
         <div className="card p-4"><div className="text-sm text-[var(--subtle)]">{t('total')} (EUR)</div><div className="text-2xl">{totalSum.toFixed(2)}</div></div>

@@ -13,7 +13,7 @@ const languages: { code: Language; label: string }[] = [
 
 export default function SettingsPage() {
   const { t } = useI18n();
-  const { profile, setProfile, numbering, setNumbering, clients, invoices, setClients, setInvoices } = useStore();
+  const { profile, setProfile, numbering, setNumbering, clients, invoices, setClients, setInvoices, companies, activeCompanyId, setActiveCompany, addCompany } = useStore();
   const [form, setForm] = useState<CompanyProfile>({
     name: '',
     address: '',
@@ -77,6 +77,13 @@ export default function SettingsPage() {
   return (
     <main className="max-w-3xl mx-auto p-6 md:p-10">
       <h1 className="text-2xl font-semibold mb-6">{t('settings_title')}</h1>
+      <div className="card p-4 mb-4 flex items-center gap-3">
+        <div className="text-sm text-[var(--subtle)]">Kompanija</div>
+        <select className="input" value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)}>
+          {companies.map(c=> <option key={c.id} value={c.id}>{c.profile.name}</option>)}
+        </select>
+        <button className="btn btn-outline" onClick={()=>{ const id = addCompany({ name: 'Nova kompanija' }); setActiveCompany(id); }}>Dodaj kompaniju</button>
+      </div>
       <div className="card p-4 grid gap-3 md:grid-cols-2">
         <input className="input" placeholder="Naziv kompanije" value={form.name} onChange={(e)=>setForm({...form, name: e.target.value})} />
         <input className="input" placeholder="Adresa" value={form.address} onChange={(e)=>setForm({...form, address: e.target.value})} />
