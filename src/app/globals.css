@@ -22,17 +22,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Light mode opt-in if needed
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #ffffff;
-    --surface: #f8fafc;
-    --muted: #e5e7eb;
-    --foreground: #0f172a;
-    --subtle: #475569;
-  }
+/* Light theme via data attribute */
+[data-theme="light"] {
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --muted: #e5e7eb;
+  --foreground: #0f172a;
+  --subtle: #475569;
 }
-*/
 
 body {
   background: radial-gradient(1200px 600px at 80% -100px, color-mix(in oklab, var(--accent-600) 20%, transparent) 0%, transparent 70%), var(--background);

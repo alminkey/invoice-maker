@@ -10,6 +10,7 @@ type Store = {
   invoices: Invoice[];
   numbering: { prefix: string; next: number; lastYear?: number; resetYearly?: boolean };
   uiLanguage?: 'bs'|'nl'|'en'|'sk';
+  theme?: 'dark'|'light';
   setProfile: (p: CompanyProfile) => void;
   addClient: (c: Client) => void;
   updateClient: (c: Client) => void;
@@ -21,6 +22,7 @@ type Store = {
   setNumbering: (n: { prefix: string; next: number; lastYear?: number; resetYearly?: boolean }) => void;
   setInvoices: (arr: Invoice[]) => void;
   setUiLanguage: (lang: 'bs'|'nl'|'en'|'sk') => void;
+  setTheme: (t: 'dark'|'light') => void;
 };
 
 export const useStore = create<Store>()(
@@ -43,6 +45,7 @@ export const useStore = create<Store>()(
         return String(weekNo);
       })()}-`, next: 1, lastYear: new Date().getFullYear(), resetYearly: true },
       uiLanguage: undefined,
+      theme: 'dark',
       setProfile: (p) => set({ profile: p }),
       addClient: (c) => set((s) => ({ clients: [c, ...s.clients] })),
       updateClient: (c) =>
@@ -56,6 +59,7 @@ export const useStore = create<Store>()(
       setNumbering: (n) => set({ numbering: n }),
       setInvoices: (arr) => set({ invoices: arr }),
       setUiLanguage: (lang) => set({ uiLanguage: lang }),
+      setTheme: (t) => set({ theme: t }),
     }),
     { name: 'invoice-maker-store' }
   )

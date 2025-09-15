@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Nav from "./Nav";
 import SwRegister from "./SwRegister";
 import "./globals.css";
+import ThemeApplier from "./ThemeApplier";
 
 export const metadata: Metadata = {
   title: "Invoice maker",
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="bs">
       <body className={`antialiased`}>
+        <ThemeApplier />
         <div className="nav">
           <div className="max-w-5xl mx-auto">
             <Nav />

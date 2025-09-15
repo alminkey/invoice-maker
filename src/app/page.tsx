@@ -8,6 +8,12 @@ import { calcInvoiceTotal, calcInvoiceAmountDue } from "@/lib/models";
 export default function Home() {
   const { t } = useI18n();
   const { invoices } = useStore();
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const totalDue = invoices.filter(i=>!i.paid).reduce((s,i)=> s + calcInvoiceAmountDue(i), 0);
+  const paidThisMonth = invoices.filter(i=> i.paid && i.paidDate && (()=>{ const d=new Date(i.paidDate); return d.getFullYear()===y && d.getMonth()===m; })()).length;
+  const unpaidCount = invoices.filter(i=> !i.paid).length;
   const recent = [...invoices].slice(0, 5);
   return (
     <main className="min-h-screen p-6 md:p-10">
@@ -15,6 +21,21 @@ export default function Home() {
         <h1 className="text-3xl font-semibold">{t('home_title')}</h1>
         <p className="text-[var(--subtle)]">{t('home_sub')}</p>
       </header>
+
+      <section className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="card p-4">
+          <div className="text-sm text-[var(--subtle)]">Za naplatu ukupno</div>
+          <div className="text-2xl text-[var(--danger)]">{totalDue.toFixed(2)} EUR</div>
+        </div>
+        <div className="card p-4">
+          <div className="text-sm text-[var(--subtle)]">Plaćene ovaj mjesec</div>
+          <div className="text-2xl text-[var(--success)]">{paidThisMonth}</div>
+        </div>
+        <div className="card p-4">
+          <div className="text-sm text-[var(--subtle)]">Neplaćene</div>
+          <div className="text-2xl">{unpaidCount}</div>
+        </div>
+      </section>
 
       <section className="grid gap-4 md:grid-cols-2">
         <Link href="/invoices/new" className="card p-6 hover:shadow-[0_10px_40px_-12px_rgba(124,58,237,0.5)] transition">

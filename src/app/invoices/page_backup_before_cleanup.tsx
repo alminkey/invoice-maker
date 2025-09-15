@@ -2,60 +2,31 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useStore } from '@/store/useStore';
-import { calcInvoiceTotal } from '@/lib/models';
+import { calcInvoiceTotal, calcInvoiceAmountDue } from '@/lib/models';
 import { useI18n } from '@/lib/i18n';
 
 export default function InvoicesIndex() {
   const { t } = useI18n();
-  const { invoices, clients, profile, removeInvoice, updateInvoice } = useStore();
+  const { invoices, clients, removeInvoice, updateInvoice } = useStore();
   const [clientId, setClientId] = useState('');
   const [status, setStatus] = useState<'all'|'paid'|'unpaid'>('all');
-  const [year, setYear] = useState('');
   const [q, setQ] = useState('');
-  const years = useMemo(()=> Array.from(new Set(invoices.map(i=> (i.issueDate||'').slice(0,4)).filter(Boolean))).sort().reverse(), [invoices]);
   const filtered = useMemo(()=>
     invoices.filter(inv =>
       (!clientId || inv.clientId === clientId) &&
       (status==='all' || (status==='paid' ? !!inv.paid : !inv.paid)) &&
-      (!q || (inv.number || '').toLowerCase().includes(q.toLowerCase())) &&
-      (!year || inv.issueDate?.startsWith(year))
+      (!q || (inv.number || '').toLowerCase().includes(q.toLowerCase()))
     )
-  ,[invoices, clientId, status, q, year]);
-
-  const exportZip = async () => {
-    if (!profile) { alert('Nedostaje profil.'); return; }
-    const JSZip = (await import('jszip')).default;
-    const { pdf } = await import('@react-pdf/renderer');
-    const { InvoicePdf, i18nLabels } = await import('@/lib/pdf');
-    const zip = new JSZip();
-    for (const inv of filtered) {
-      const client = clients.find(c=>c.id===inv.clientId);
-      if (!client) continue;
-      const labels = i18nLabels[inv.language || profile.defaultLanguage] || i18nLabels.en;
-      const blob = await pdf(<InvoicePdf profile={profile} client={client} invoice={inv} labels={labels} />).toBlob();
-      const name = `${inv.number ?? `invoice-${inv.id}`}.pdf`;
-      zip.file(name, blob);
-    }
-    const out = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(out);
-    const a = document.createElement('a');
-    a.href = url;
-    const label = `${clientId ? (clients.find(c=>c.id===clientId)?.name || 'client') : 'all'}-${year || 'all'}`;
-    a.download = `invoices-${label}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
+  ,[invoices, clientId, status, q]);
   return (
     <main className="max-w-3xl mx-auto p-6 md:p-10">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">{t('invoices_title')}</h1>
-        <div className="flex items-center gap-2">
-          <button onClick={exportZip} className="btn btn-outline">Export ZIP</button>
-          <Link href="/invoices/new" className="btn btn-primary"><span className="inline-block mr-2">+</span>{t('new_invoice')}</Link>
-        </div>
+        <Link href="/invoices/new" className="btn btn-primary">
+          <span className="inline-block mr-2">＋</span>{t('new_invoice')}
+        </Link>
       </div>
-      <div className="grid md:grid-cols-5 gap-2 mb-4">
+      <div className="grid md:grid-cols-4 gap-2 mb-4">
         <select className="input" value={clientId} onChange={(e)=>setClientId(e.target.value)}>
           <option value="">{t('filter_client')}</option>
           {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -64,10 +35,6 @@ export default function InvoicesIndex() {
           <option value="all">{t('status_all')}</option>
           <option value="paid">{t('status_paid')}</option>
           <option value="unpaid">{t('status_unpaid')}</option>
-        </select>
-        <select className="input" value={year} onChange={(e)=>setYear(e.target.value)}>
-          <option value="">Godina</option>
-          {years.map(y=> <option key={y} value={y}>{y}</option>)}
         </select>
         <input className="input md:col-span-2" placeholder={t('search')} value={q} onChange={(e)=>setQ(e.target.value)} />
       </div>
@@ -89,7 +56,7 @@ export default function InvoicesIndex() {
               <div className="text-sm">{inv.number ?? `#${inv.id.slice(0,6)}`}</div>
               <div className="text-sm text-[var(--subtle)]">
                 {inv.issueDate}
-                {inv.dueDate ? <> - {inv.dueDate} {diff !== null ? <span className={`ml-2 text-xs font-semibold ${Number(diff) >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>({Math.abs(Number(diff))})</span> : null}</> : null}
+                {inv.dueDate ? <> • {inv.dueDate} {diff !== null ? <span className={`ml-2 text-xs font-semibold ${Number(diff) >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>({Math.abs(Number(diff))})</span> : null}</> : null}
               </div>
             </div>
             <div className="flex gap-3 justify-end items-center">
