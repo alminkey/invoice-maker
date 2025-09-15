@@ -23,13 +23,15 @@ export default function Nav() {
   }, [open]);
 
   return (
-    <nav className="p-4 flex gap-4 text-sm items-center relative">
+    <nav className="p-4 flex gap-2 flex-wrap items-center relative">
       <Link href="/" className="font-semibold tracking-tight text-white">Invoice<span className="text-[var(--accent-400)]">maker</span></Link>
-      <Link href="/invoices" className="hover:underline text-[var(--subtle)] hover:text-white hidden md:inline">{t('nav_invoices')}</Link>
-      <Link href="/clients" className="hover:underline text-[var(--subtle)] hover:text-white hidden md:inline">{t('nav_clients')}</Link>
-      <Link href="/stats" className="hover:underline text-[var(--subtle)] hover:text-white hidden md:inline">{t('nav_stats')}</Link>
-      <Link href="/settings" className="hover:underline text-[var(--subtle)] hover:text-white ml-auto hidden md:inline">{t('nav_settings')}</Link>
-      <button ref={btnRef} aria-label="Menu" className="btn btn-outline md:ml-2 ml-auto" onClick={()=>setOpen(v=>!v)}>
+      <div className="flex gap-2">
+        <Link href="/invoices" className="btn btn-outline">{t('nav_invoices')}</Link>
+        <Link href="/clients" className="btn btn-outline">{t('nav_clients')}</Link>
+        <Link href="/stats" className="btn btn-outline">{t('nav_stats')}</Link>
+        <Link href="/settings" className="btn btn-outline">{t('nav_settings')}</Link>
+      </div>
+      <button ref={btnRef} aria-label="Menu" className="btn btn-outline ml-auto" onClick={()=>setOpen(v=>!v)}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="3" y1="6" x2="21" y2="6"/>
           <line x1="3" y1="12" x2="21" y2="12"/>
@@ -38,21 +40,15 @@ export default function Nav() {
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={()=>setOpen(false)} />
-          <div className="fixed right-0 top-0 bottom-0 w-80 bg-[var(--surface)] border-l border-white/10 z-50 transform transition-transform duration-200 ease-out translate-x-0" ref={panelRef}>
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <div className="font-medium">Meni</div>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={()=>setOpen(false)} />
+          <div ref={panelRef} className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-medium">Postavke</div>
               <button className="btn btn-outline px-2 py-1" onClick={()=>setOpen(false)} aria-label="Close">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div className="p-4 space-y-4 overflow-y-auto h-full">
-              <div className="grid gap-2">
-                <Link href="/invoices" className="btn btn-outline w-full justify-start" onClick={()=>setOpen(false)}>{t('nav_invoices')}</Link>
-                <Link href="/clients" className="btn btn-outline w-full justify-start" onClick={()=>setOpen(false)}>{t('nav_clients')}</Link>
-                <Link href="/stats" className="btn btn-outline w-full justify-start" onClick={()=>setOpen(false)}>{t('nav_stats')}</Link>
-                <Link href="/settings" className="btn btn-outline w-full justify-start" onClick={()=>setOpen(false)}>{t('nav_settings')}</Link>
-              </div>
+            <div className="space-y-4">
               <div>
                 <div className="text-xs text-[var(--subtle)] mb-1">Kompanija</div>
                 <select value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)} className="input w-full">
@@ -69,7 +65,7 @@ export default function Nav() {
                   <option value="sk">SK</option>
                 </select>
               </div>
-              <div className="pt-1">
+              <div>
                 <label className="chip cursor-pointer w-full justify-center select-none">
                   <input
                     type="checkbox"
