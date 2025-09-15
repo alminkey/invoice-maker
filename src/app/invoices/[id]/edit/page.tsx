@@ -54,6 +54,12 @@ export default function EditInvoicePage() {
   const onSave = () => {
     if (!invoice) return;
     if (!validate()) return;
+    // Recompute invoice number based on current numbering settings and issue year
+    const year = new Date(issueDate).getFullYear();
+    const serial = Math.max(1, Number(numbering.next || 1));
+    const prefix = (numbering.prefix || '').toString();
+    const newNumber = `${prefix}${year}-${String(serial).padStart(4, '0')}`;
+
     const updated: Invoice = {
       ...invoice,
       clientId,
@@ -63,6 +69,7 @@ export default function EditInvoicePage() {
       notes,
       deposit: deposit || 0,
       depositEnabled,
+      number: newNumber,
     };
     updateInvoice(updated);
     router.push(`/invoices/${invoice.id}`);
