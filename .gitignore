@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local docs/logs and backups (not part of app)
+greske.md
+odgovor*.md
+odgovr*.md
+tmp_*.tsx
+*backup_before_*.tsx
+.idea/
