@@ -34,8 +34,8 @@ type Store = {
 };
 
 export const useStore = create<Store>()(
-  persist(
-    (set, get) => ({
+  persist<Store>(
+    (set, get): Store => ({
       /* default numbering prefix = current ISO week number + '-' */
       // helper for ISO week number
       
@@ -175,7 +175,7 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'invoice-maker-store',
-      onRehydrateStorage: () => (state: unknown, error?: unknown) => {
+      onRehydrateStorage: () => () => {
         try {
           const s = get();
           // migrate single-profile store to multi-company on first load
