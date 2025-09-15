@@ -54,7 +54,6 @@ export default function EditInvoicePage() {
   const onSave = () => {
     if (!invoice) return;
     if (!validate()) return;
-    // Recompute invoice number based on current numbering settings and issue year
     const year = new Date(issueDate).getFullYear();
     const serial = Math.max(1, Number(numbering.next || 1));
     const prefix = (numbering.prefix || '').toString();
@@ -132,8 +131,8 @@ export default function EditInvoicePage() {
               <input
                 inputMode="decimal"
                 className="input md:col-span-1"
-                placeholder="Koli�ina"
-                value={Number.isFinite(it.quantity) ? it.quantity : '' as any}
+                placeholder="Količina"
+                value={Number.isFinite(it.quantity) ? String(it.quantity) : ''}
                 onChange={(e)=>{
                   const v = e.target.value;
                   const num = v==='' ? NaN : Number(v);
@@ -145,7 +144,7 @@ export default function EditInvoicePage() {
                   inputMode="decimal"
                   className="input"
                   placeholder="Cijena"
-                  value={Number.isFinite(it.unitPrice) ? it.unitPrice : '' as any}
+                  value={Number.isFinite(it.unitPrice) ? String(it.unitPrice) : ''}
                   onChange={(e)=>{
                     const v = e.target.value;
                     const num = v==='' ? NaN : Number(v);
@@ -170,13 +169,10 @@ export default function EditInvoicePage() {
           <label className="chip cursor-pointer select-none">
             <input type="checkbox" className="mr-2" checked={depositEnabled} onChange={(e)=>setDepositEnabled(e.target.checked)} />{t('show_in_pdf')}
           </label>
-          <div className="text-sm text-[var(--subtle)]">
-            {t('total')}: {subtotal.toFixed(2)} EUR → {t('amount_due')}: {amountDue.toFixed(2)} EUR
-          </div>
+          <div className="text-sm text-[var(--subtle)]">{t('total')}: {subtotal.toFixed(2)} EUR → {t('amount_due')}: {amountDue.toFixed(2)} EUR</div>
         </div>
       </div>
 
-      {/* Invoice numbering controls */}
       <div className="mt-6 card p-4">
         <h2 className="font-medium mb-2">{t('numbering')}</h2>
         <div className="grid md:grid-cols-3 gap-3">

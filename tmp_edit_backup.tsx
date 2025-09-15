@@ -1,36 +1,42 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { Invoice, InvoiceItem, calcInvoiceTotal } from '@/lib/models';
 import { uid } from '@/lib/id';
 import { useI18n } from '@/lib/i18n';
-import Calendar from '@/components/Calendar';
 
-export default function NewInvoicePage() {
+export default function EditInvoicePage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const { invoices, clients, updateInvoice, numbering, setNumbering } = useStore();
   const { t } = useI18n();
-  const { clients, addInvoice, profile, numbering, setNumbering, companies, activeCompanyId, setActiveCompany } = useStore();
+  const invoice = useMemo(() => invoices.find(i=>i.id===params.id), [invoices, params.id]);
+
   const [clientId, setClientId] = useState("");
-  const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0,10));
+  const [issueDate, setIssueDate] = useState<string>("");
   const [dueDate, setDueDate] = useState<string>("");
-  const [items, setItems] = useState<InvoiceItem[]>([
-    { id: uid(), description: '', quantity: 1, unitPrice: 0, startDate: '', endDate: '' },
-  ]);
+  const [items, setItems] = useState<InvoiceItem[]>([]);
   const [notes, setNotes] = useState("");
   const [deposit, setDeposit] = useState<number>(0);
-  const [depositEnabled, setDepositEnabled] = useState<boolean>(true);
+  const [depositEnabled, setDepositEnabled] = useState<boolean>(false);
   const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (invoice) {
+      setClientId(invoice.clientId);
+      setIssueDate(invoice.issueDate);
+      setDueDate(invoice.dueDate || "");
+      setItems(invoice.items.map(it=>({...it})));
+      setNotes(invoice.notes || "");
+      setDepositEnabled(!!invoice.depositEnabled);
+      setDeposit(invoice.deposit || 0);
+    }
+  }, [invoice]);
 
   const addRow = () => setItems((arr)=>[...arr, { id: uid(), description: '', quantity: 1, unitPrice: 0, startDate: '', endDate: '' }]);
   const updateItem = (id: string, patch: Partial<InvoiceItem>) => setItems((arr)=>arr.map(i=>i.id===id?{...i, ...patch}:i));
   const removeItem = (id: string) => setItems((arr)=>arr.filter(i=>i.id!==id));
-
-  // Prefill description from last invoice for the same client
-  const lastDescForClient = (cid: string) => {
-    const last = useStore.getState().invoices.find(i=>i.clientId===cid);
-    return last?.items?.[0]?.description || '';
-  };
 
   const validate = () => {
     const errs: string[] = [];
@@ -46,37 +52,40 @@ export default function NewInvoicePage() {
   };
 
   const onSave = () => {
+    if (!invoice) return;
     if (!validate()) return;
+    // Recompute invoice number based on current numbering settings and issue year
     const year = new Date(issueDate).getFullYear();
-    const shouldReset = numbering?.resetYearly && numbering?.lastYear !== year;
-    const serial = shouldReset ? 1 : (numbering?.next ?? (profile?.nextInvoice ?? 1));
-    const prefix = (numbering?.prefix ?? profile?.invoicePrefix ?? '') || '';
-    const number = `${prefix}${year}-${String(serial).padStart(4, '0')}`;
-    const inv: Invoice = {
-      id: uid(),
+    const serial = Math.max(1, Number(numbering.next || 1));
+    const prefix = (numbering.prefix || '').toString();
+    const newNumber = `${prefix}${year}-${String(serial).padStart(4, '0')}`;
+
+    const updated: Invoice = {
+      ...invoice,
       clientId,
       issueDate,
       dueDate: dueDate || undefined,
       items: items.filter(i => i.description.trim() && i.quantity > 0),
       notes,
-      currency: 'EUR',
-      language: profile?.defaultLanguage || 'bs',
-      number,
       deposit: deposit || 0,
       depositEnabled,
+      number: newNumber,
     };
-    addInvoice(inv);
-    setNumbering({ prefix, next: serial + 1, lastYear: year, resetYearly: numbering?.resetYearly });
-    router.push(`/invoices/${inv.id}`);
+    updateInvoice(updated);
+    router.push(`/invoices/${invoice.id}`);
   };
 
-  const tempInvoice: Invoice = { id:'-', clientId:'-', issueDate, items, currency:'EUR' };
+  if (!invoice) {
+    return <main className="max-w-4xl mx-auto p-6 md:p-10">Faktura nije pronađena.</main>;
+  }
+
+  const tempInvoice: Invoice = { id:'-', clientId, issueDate, items, currency:'EUR' };
   const subtotal = calcInvoiceTotal(tempInvoice);
   const amountDue = Math.max(0, subtotal - (deposit||0));
 
   return (
     <main className="max-w-4xl mx-auto p-6 md:p-10">
-      <h1 className="text-2xl font-semibold mb-6">{t('new_invoice')}</h1>
+      <h1 className="text-2xl font-semibold mb-6">{t('edit')} {invoice.number ?? `#${invoice.id.slice(0,6)}`}</h1>
 
       {errors.length > 0 && (
         <div className="mb-4 rounded border border-red-500/30 bg-red-500/10 text-red-300 p-3 text-sm">
@@ -89,15 +98,9 @@ export default function NewInvoicePage() {
       <div className="card p-4 grid gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm text-[var(--subtle)] mb-1">Klijent</label>
-          <select className="input" value={clientId} onChange={(e)=>{ const v=e.target.value; setClientId(v); if (v) { const d = lastDescForClient(v); if (d && !items[0]?.description) { setItems((arr)=> arr.length? [{...arr[0], description: d}, ...arr.slice(1)] : [{ id: uid(), description: d, quantity:1, unitPrice:0, startDate:'', endDate:'' }]); } } }}>
+          <select className="input" value={clientId} onChange={(e)=>setClientId(e.target.value)}>
             <option value="">-- Odaberite klijenta --</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm text-[var(--subtle)] mb-1">Kompanija</label>
-          <select className="input" value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)}>
-            {companies.map(c=> <option key={c.id} value={c.id}>{c.profile.name}</option>)}
           </select>
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -129,8 +132,8 @@ export default function NewInvoicePage() {
               <input
                 inputMode="decimal"
                 className="input md:col-span-1"
-                placeholder="Količina"
-                value={Number.isFinite(it.quantity) ? String(it.quantity) : ''}
+                placeholder="Koli�ina"
+                value={Number.isFinite(it.quantity) ? it.quantity : '' as any}
                 onChange={(e)=>{
                   const v = e.target.value;
                   const num = v==='' ? NaN : Number(v);
@@ -142,7 +145,7 @@ export default function NewInvoicePage() {
                   inputMode="decimal"
                   className="input"
                   placeholder="Cijena"
-                  value={Number.isFinite(it.unitPrice) ? String(it.unitPrice) : ''}
+                  value={Number.isFinite(it.unitPrice) ? it.unitPrice : '' as any}
                   onChange={(e)=>{
                     const v = e.target.value;
                     const num = v==='' ? NaN : Number(v);
@@ -167,10 +170,13 @@ export default function NewInvoicePage() {
           <label className="chip cursor-pointer select-none">
             <input type="checkbox" className="mr-2" checked={depositEnabled} onChange={(e)=>setDepositEnabled(e.target.checked)} />{t('show_in_pdf')}
           </label>
-          <div className="text-sm text-[var(--subtle)]">{t('total')}: {subtotal.toFixed(2)} EUR → {t('amount_due')}: {amountDue.toFixed(2)} EUR</div>
+          <div className="text-sm text-[var(--subtle)]">
+            {t('total')}: {subtotal.toFixed(2)} EUR → {t('amount_due')}: {amountDue.toFixed(2)} EUR
+          </div>
         </div>
       </div>
 
+      {/* Invoice numbering controls */}
       <div className="mt-6 card p-4">
         <h2 className="font-medium mb-2">{t('numbering')}</h2>
         <div className="grid md:grid-cols-3 gap-3">
@@ -185,8 +191,8 @@ export default function NewInvoicePage() {
           <div className="text-sm text-[var(--subtle)] flex items-end">{t('format')}: {`${numbering.prefix || ''}${new Date().getFullYear()}-${String(numbering.next).padStart(4,'0')}`}</div>
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <input id="resetYearlyNew" type="checkbox" checked={!!numbering.resetYearly} onChange={(e)=>setNumbering({...numbering, resetYearly: e.target.checked})} />
-          <label htmlFor="resetYearlyNew" className="text-sm text-[var(--subtle)]">Resetuj serijski broj svake godine</label>
+          <input id="resetYearlyEdit" type="checkbox" checked={!!numbering.resetYearly} onChange={(e)=>setNumbering({...numbering, resetYearly: e.target.checked})} />
+          <label htmlFor="resetYearlyEdit" className="text-sm text-[var(--subtle)]">Resetuj serijski broj svake godine</label>
         </div>
       </div>
 
@@ -195,12 +201,9 @@ export default function NewInvoicePage() {
         <textarea className="input" rows={3} value={notes} onChange={(e)=>setNotes(e.target.value)} />
       </div>
 
-      <div className="mt-4">
-        <Calendar />
-      </div>
-
       <button onClick={onSave} className="mt-6 btn btn-primary">{t('save')}</button>
     </main>
   );
 }
+
 
