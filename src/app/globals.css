@@ -94,3 +94,4 @@ body {
   select option { color: #ffffff; background: var(--surface); font-weight: 600; }
   select:focus { outline: none; }
 }
+
