@@ -79,7 +79,8 @@ export default function EditInvoicePage() {
     return <main className="max-w-4xl mx-auto p-6 md:p-10">Faktura nije pronađena.</main>;
   }
 
-  const subtotal = calcInvoiceTotal({ id:'-', clientId, issueDate, items, currency:'EUR' } as any);
+  const tempInvoice: Invoice = { id:'-', clientId, issueDate, items, currency:'EUR' };
+  const subtotal = calcInvoiceTotal(tempInvoice);
   const amountDue = Math.max(0, subtotal - (deposit||0));
 
   return (
@@ -131,12 +132,12 @@ export default function EditInvoicePage() {
               <input
                 inputMode="decimal"
                 className="input md:col-span-1"
-                placeholder="Količina"
+                placeholder="Koli�ina"
                 value={Number.isFinite(it.quantity) ? it.quantity : '' as any}
                 onChange={(e)=>{
                   const v = e.target.value;
                   const num = v==='' ? NaN : Number(v);
-                  updateItem(it.id,{quantity: num as any});
+                  updateItem(it.id,{quantity: num});
                 }}
               />
               <div className="md:col-span-1">
@@ -148,7 +149,7 @@ export default function EditInvoicePage() {
                   onChange={(e)=>{
                     const v = e.target.value;
                     const num = v==='' ? NaN : Number(v);
-                    updateItem(it.id,{unitPrice: num as any});
+                    updateItem(it.id,{unitPrice: num});
                   }}
                 />
                 <div className="mt-1 text-xs text-[var(--subtle)]">{(it.quantity * it.unitPrice).toFixed(2)} EUR</div>
@@ -204,3 +205,4 @@ export default function EditInvoicePage() {
     </main>
   );
 }
+

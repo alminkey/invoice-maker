@@ -71,7 +71,8 @@ export default function NewInvoicePage() {
     router.push(`/invoices/${inv.id}`);
   };
 
-  const subtotal = calcInvoiceTotal({ id:'-', clientId:'-', issueDate, items, currency:'EUR' } as any);
+  const tempInvoice: Invoice = { id:'-', clientId:'-', issueDate, items, currency:'EUR' } as Invoice;
+  const subtotal = calcInvoiceTotal(tempInvoice);
   const amountDue = Math.max(0, subtotal - (deposit||0));
 
   return (
@@ -89,7 +90,7 @@ export default function NewInvoicePage() {
       <div className="card p-4 grid gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm text-[var(--subtle)] mb-1">Klijent</label>
-          <select className="input" value={clientId} onChange={(e)=>{ const v=e.target.value; setClientId(v); if (v) { const d = lastDescForClient(v); if (d && !items[0]?.description) { setItems((arr)=> arr.length? [{...arr[0], description: d}, ...arr.slice(1)] : [{ id: uid(), description: d, quantity:1, unitPrice:0 } as any]); } } }}>
+          <select className="input" value={clientId} onChange={(e)=>{ const v=e.target.value; setClientId(v); if (v) { const d = lastDescForClient(v); if (d && !items[0]?.description) { setItems((arr)=> arr.length? [{...arr[0], description: d}, ...arr.slice(1)] : [{ id: uid(), description: d, quantity:1, unitPrice:0, startDate:'', endDate:'' }]); } } }}>
             <option value="">-- Odaberite klijenta --</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
@@ -129,12 +130,12 @@ export default function NewInvoicePage() {
               <input
                 inputMode="decimal"
                 className="input md:col-span-1"
-                placeholder="KoliÄina"
+                placeholder="Kolièina"
                 value={Number.isFinite(it.quantity) ? it.quantity : '' as any}
                 onChange={(e)=>{
                   const v = e.target.value;
                   const num = v==='' ? NaN : Number(v);
-                  updateItem(it.id,{quantity: num as any});
+                  updateItem(it.id,{quantity: num});
                 }}
               />
               <div className="md:col-span-1">
@@ -146,7 +147,7 @@ export default function NewInvoicePage() {
                   onChange={(e)=>{
                     const v = e.target.value;
                     const num = v==='' ? NaN : Number(v);
-                    updateItem(it.id,{unitPrice: num as any});
+                    updateItem(it.id,{unitPrice: num});
                   }}
                 />
                 <div className="mt-1 text-xs text-[var(--subtle)]">{(it.quantity * it.unitPrice).toFixed(2)} EUR</div>
@@ -206,3 +207,4 @@ export default function NewInvoicePage() {
     </main>
   );
 }
+

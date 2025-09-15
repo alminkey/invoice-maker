@@ -30,6 +30,7 @@ type Store = {
   updateCompany: (id: string, patch: Partial<Company>) => void;
   removeCompany: (id: string) => void;
   setActiveCompany: (id: string) => void;
+  _syncFromActive: () => void;
 };
 
 export const useStore = create<Store>()(
@@ -152,12 +153,17 @@ export const useStore = create<Store>()(
         // sync mirrors
         const state = get();
         if (!state.profile) {
-          (get() as any)._syncFromActive?.();
+          get()._syncFromActive?.();
         }
         return id;
       },
       updateCompany: (id, patch) => set((s)=>{
-        const companies = s.companies.map(co => co.id===id ? { ...co, ...patch, profile: { ...co.profile, ...(patch as any).profile } } : co);
+        const companies = s.companies.map(co => {
+          if (co.id !== id) return co;
+          const nextProfile = patch.profile ? { ...co.profile, ...patch.profile } : co.profile;
+          const nextNumbering = patch.numbering ? { ...co.numbering, ...patch.numbering } : co.numbering;
+          return { ...co, ...patch, profile: nextProfile, numbering: nextNumbering } as Company;
+        });
         return { companies };
       }),
       removeCompany: (id) => set((s)=>{
@@ -165,7 +171,7 @@ export const useStore = create<Store>()(
         const activeCompanyId = s.activeCompanyId===id ? companies[0]?.id : s.activeCompanyId;
         return { companies, activeCompanyId };
       }),
-      setActiveCompany: (id) => { set({ activeCompanyId: id }); (get() as any)._syncFromActive?.(); },
+      setActiveCompany: (id) => { set({ activeCompanyId: id }); get()._syncFromActive?.(); },
     }),
     {
       name: 'invoice-maker-store',
@@ -183,9 +189,9 @@ export const useStore = create<Store>()(
               invoices: s.invoices,
             };
             set({ companies: [co], activeCompanyId: id });
-            (get() as any)._syncFromActive?.();
+            get()._syncFromActive?.();
           } else {
-            (get() as any)._syncFromActive?.();
+            get()._syncFromActive?.();
           }
         } catch {}
       }

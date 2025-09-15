@@ -24,8 +24,7 @@ export default function InvoicesIndex() {
 
   const exportZip = async () => {
     if (!profile) { alert('Nedostaje profil.'); return; }
-    const mod = await import('jszip');
-    const JSZip: any = (mod as any).default || (mod as any);
+    const { default: JSZip } = await import('jszip');
     const { pdf } = await import('@react-pdf/renderer');
     const { InvoicePdf, i18nLabels } = await import('@/lib/pdf');
     const zip = new JSZip();
