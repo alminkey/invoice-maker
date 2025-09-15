@@ -73,6 +73,10 @@ body {
   .calendar .weekend {
     background-color: color-mix(in oklab, var(--accent-600) 10%, transparent);
   }
+  .calendar .today {
+    background-color: var(--accent-600);
+    color: white;
+  }
   /* Improve readability for native select dropdowns */
   select.input {
     color-scheme: dark; /* ensure dark popups */

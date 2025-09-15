@@ -23,6 +23,7 @@ export default function Calendar({ initial }: Props) {
     setMonth(d.getMonth());
   };
 
+  const today = new Date();
   return (
     <div className="calendar card p-3">
       <div className="flex items-center justify-between mb-2">
@@ -42,9 +43,15 @@ export default function Calendar({ initial }: Props) {
       <div className="grid grid-cols-7 gap-[2px]">
         {weeks.map((w, wi)=> (
           w.map((cell, ci)=> {
-            const isWeekend = cell.weekday === 5 || cell.weekday === 6; // 5=Sat,6=Sun in our Monday-based index
+            const isWeekend = cell.weekday === 5 || cell.weekday === 6; // 5=Sat,6=Sun
             const inMonth = cell.inMonth;
-            const cls = `rounded-md text-center py-2 ${inMonth ? 'text-[var(--foreground)]' : 'text-[var(--subtle)]/60'} ${isWeekend ? 'weekend' : ''}`;
+            const isToday = inMonth && (year === today.getFullYear()) && (month === today.getMonth()) && (cell.day === today.getDate());
+            const cls = [
+              'rounded-md text-center py-2',
+              inMonth ? 'text-[var(--foreground)]' : 'text-[var(--subtle)]/60',
+              isWeekend ? 'weekend' : '',
+              isToday ? 'today font-semibold' : ''
+            ].join(' ').trim();
             return <div key={`${wi}-${ci}`} className={cls}>{cell.day}</div>;
           })
         ))}
