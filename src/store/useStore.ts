@@ -35,7 +35,7 @@ type Store = {
 
 export const useStore = create<Store>()(
   persist<Store>(
-    (set, get): Store => ({
+    (set, get, _api): Store => ({
       /* default numbering prefix = current ISO week number + '-' */
       // helper for ISO week number
       
