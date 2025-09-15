@@ -66,7 +66,11 @@ export const useStore = create<Store>()(
           invoices: c?.invoices ?? [],
         });
       },
-      setProfile: (p) => set({ profile: p }),
+      setProfile: (p) => set((s)=>{
+        const id = s.activeCompanyId;
+        const companies = s.companies.map(co => co.id===id ? { ...co, profile: p } : co);
+        return { companies, profile: p };
+      }),
       addClient: (c) => set((s) => {
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, clients: [c, ...co.clients] } : co);
