@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore';
 import { Invoice, InvoiceItem, calcInvoiceTotal } from '@/lib/models';
 import { uid } from '@/lib/id';
 import { useI18n } from '@/lib/i18n';
+import Calendar from '@/components/Calendar';
 
 export default function NewInvoicePage() {
   const router = useRouter();
@@ -163,6 +164,10 @@ export default function NewInvoicePage() {
       <div className="mt-6">
         <label className="block text-sm text-[var(--subtle)] mb-1">Napomena</label>
         <textarea className="input" rows={3} value={notes} onChange={(e)=>setNotes(e.target.value)} />
+      </div>
+
+      <div className="mt-4">
+        <Calendar />
       </div>
 
       <button onClick={onSave} className="mt-6 btn btn-primary">{t('save')}</button>
