@@ -118,8 +118,8 @@ export default function EditInvoicePage() {
         <h2 className="font-medium mb-2">Stavke</h2>
         <div className="space-y-2">
           {items.map((it)=> (
-            <div key={it.id} className="card p-3 grid md:grid-cols-10 gap-2 items-center">
-              <input className="input md:col-span-4" placeholder="Opis" value={it.description} onChange={(e)=>updateItem(it.id,{description:e.target.value})} />
+            <div key={it.id} className="card p-3 grid md:grid-cols-10 gap-2 items-start">
+              <textarea className="input md:col-span-4" rows={4} placeholder="Opis" value={it.description} onChange={(e)=>updateItem(it.id,{description:e.target.value})} />
               <input type="date" className="input md:col-span-2" placeholder="Od" value={it.startDate || ''} onChange={(e)=>updateItem(it.id,{startDate: e.target.value})} />
               <input type="date" className="input md:col-span-2" placeholder="Do" value={it.endDate || ''} onChange={(e)=>updateItem(it.id,{endDate: e.target.value})} />
               <input type="number" className="input md:col-span-1" placeholder="Kol." value={it.quantity} onChange={(e)=>updateItem(it.id,{quantity: Number(e.target.value)})} />

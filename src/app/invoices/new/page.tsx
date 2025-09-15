@@ -26,6 +26,12 @@ export default function NewInvoicePage() {
   const updateItem = (id: string, patch: Partial<InvoiceItem>) => setItems((arr)=>arr.map(i=>i.id===id?{...i, ...patch}:i));
   const removeItem = (id: string) => setItems((arr)=>arr.filter(i=>i.id!==id));
 
+  // Prefill description from last invoice for the same client
+  const lastDescForClient = (cid: string) => {
+    const last = useStore.getState().invoices.find(i=>i.clientId===cid);
+    return last?.items?.[0]?.description || '';
+  };
+
   const validate = () => {
     const errs: string[] = [];
     if (!clientId) errs.push(t('select_client'));
@@ -83,7 +89,7 @@ export default function NewInvoicePage() {
       <div className="card p-4 grid gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm text-[var(--subtle)] mb-1">Klijent</label>
-          <select className="input" value={clientId} onChange={(e)=>setClientId(e.target.value)}>
+          <select className="input" value={clientId} onChange={(e)=>{ const v=e.target.value; setClientId(v); if (v) { const d = lastDescForClient(v); if (d && !items[0]?.description) { setItems((arr)=> arr.length? [{...arr[0], description: d}, ...arr.slice(1)] : [{ id: uid(), description: d, quantity:1, unitPrice:0 } as any]); } } }}>
             <option value="">-- Odaberite klijenta --</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
@@ -110,8 +116,8 @@ export default function NewInvoicePage() {
         <h2 className="font-medium mb-2">Stavke</h2>
         <div className="space-y-2">
           {items.map((it)=> (
-            <div key={it.id} className="card p-3 grid md:grid-cols-10 gap-2 items-center">
-              <input className="input md:col-span-4" placeholder="Opis" value={it.description} onChange={(e)=>updateItem(it.id,{description:e.target.value})} />
+            <div key={it.id} className="card p-3 grid md:grid-cols-10 gap-2 items-start">
+              <textarea className="input md:col-span-4" rows={4} placeholder="Opis" value={it.description} onChange={(e)=>updateItem(it.id,{description:e.target.value})} />
               <input type="date" className="input md:col-span-2" placeholder="Od" value={it.startDate || ''} onChange={(e)=>updateItem(it.id,{startDate: e.target.value})} />
               <input type="date" className="input md:col-span-2" placeholder="Do" value={it.endDate || ''} onChange={(e)=>updateItem(it.id,{endDate: e.target.value})} />
               <input type="number" className="input md:col-span-1" placeholder="Kol." value={it.quantity} onChange={(e)=>updateItem(it.id,{quantity: Number(e.target.value)})} />
