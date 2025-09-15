@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0c10;
+  --surface: #0f1117;
+  --muted: #1a1f2e;
+  --foreground: #e6e8ec;
+  --subtle: #a9b0c0;
+  --accent: #7c3aed; /* violet-600 */
+  --accent-600: #7c3aed;
+  --accent-500: #8b5cf6;
+  --accent-400: #a78bfa;
+  --accent-700: #6d28d9;
+  --success: #16a34a;
+  --danger: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Light mode opt-in if needed
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #ffffff;
+    --surface: #f8fafc;
+    --muted: #e5e7eb;
+    --foreground: #0f172a;
+    --subtle: #475569;
+  }
+}
+*/
+
+body {
+  background: radial-gradient(1200px 600px at 80% -100px, color-mix(in oklab, var(--accent-600) 20%, transparent) 0%, transparent 70%), var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* Components */
+@layer components {
+  .card {
+    @apply rounded-xl border border-white/10 bg-[var(--surface)] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)];
+  }
+  .input {
+    @apply w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm placeholder:text-[var(--subtle)] outline-none focus:ring-2 focus:ring-[var(--accent-500)] focus:border-transparent transition;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition active:scale-[0.99];
+  }
+  .btn-primary {
+    background-image: linear-gradient(135deg, var(--accent-600), var(--accent-500));
+    color: white;
+    box-shadow: 0 8px 20px -10px var(--accent-600);
+  }
+  .btn-success {
+    background-image: linear-gradient(135deg, var(--success), #22c55e);
+    color: white;
+    box-shadow: 0 8px 20px -10px var(--success);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-outline { @apply border border-white/15 bg-transparent text-[var(--foreground)]; }
+  .btn-outline:hover { @apply border-white/25 bg-white/5; }
+  .btn-danger { @apply border border-[var(--danger)]/40 text-[var(--danger)]; }
+  .btn-danger:hover { @apply bg-[var(--danger)]/10; }
+  .chip {
+    @apply inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-[var(--subtle)];
+  }
+  .nav {
+    @apply sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-black/30 border-b border-white/10;
+    background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent-600) 18%, transparent), transparent);
+  }
+  /* Improve readability for native select dropdowns */
+  select.input {
+    color-scheme: dark; /* ensure dark popups */
+    background-color: var(--surface);
+    color: var(--foreground);
+  }
+  /* Also apply dark color scheme for any select to improve popup contrast */
+  select { color-scheme: dark; }
+  select.input option {
+    color: #ffffff;
+    background: var(--surface);
+    font-weight: 600;
+  }
+  select option { color: #ffffff; background: var(--surface); font-weight: 600; }
+  select:focus { outline: none; }
+}
