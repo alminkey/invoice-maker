@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 
 type Props = { initial?: Date };
 
+const BS_MONTHS = ['januar','februar','mart','april','maj','juni','juli','august','septembar','oktobar','novembar','decembar'];
+
 export default function Calendar({ initial }: Props) {
   const start = initial ?? new Date();
   const [year, setYear] = useState<number>(start.getFullYear());
@@ -24,9 +26,13 @@ export default function Calendar({ initial }: Props) {
   return (
     <div className="calendar card p-3">
       <div className="flex items-center justify-between mb-2">
-        <button className="btn btn-outline px-2 py-1" onClick={prevMonth} aria-label="Previous month">‹</button>
-        <div className="text-sm font-medium">{title}</div>
-        <button className="btn btn-outline px-2 py-1" onClick={nextMonth} aria-label="Next month">›</button>
+        <button className="btn btn-outline px-2 py-1" onClick={prevMonth} aria-label="Previous month">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+        </button>
+        <div className="text-sm font-medium capitalize">{title}</div>
+        <button className="btn btn-outline px-2 py-1" onClick={nextMonth} aria-label="Next month">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+        </button>
       </div>
       <div className="grid grid-cols-7 text-xs text-[var(--subtle)] mb-1">
         {['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].map((d)=> (
@@ -80,6 +86,6 @@ function buildMatrix(y: number, m: number) {
   const weeks: typeof cells[] = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
-  const title = new Date(y, m, 1).toLocaleString('bs-BA', { month: 'long', year: 'numeric' });
+  const title = `${BS_MONTHS[m]} ${y}`;
   return { weeks, title };
 }
