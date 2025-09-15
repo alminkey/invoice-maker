@@ -120,11 +120,37 @@ export default function EditInvoicePage() {
           {items.map((it)=> (
             <div key={it.id} className="card p-3 grid md:grid-cols-10 gap-2 items-start">
               <textarea className="input md:col-span-4" rows={4} placeholder="Opis" value={it.description} onChange={(e)=>updateItem(it.id,{description:e.target.value})} />
-              <input type="date" className="input md:col-span-2" placeholder="Od" value={it.startDate || ''} onChange={(e)=>updateItem(it.id,{startDate: e.target.value})} />
-              <input type="date" className="input md:col-span-2" placeholder="Do" value={it.endDate || ''} onChange={(e)=>updateItem(it.id,{endDate: e.target.value})} />
-              <input type="number" className="input md:col-span-1" placeholder="Kol." value={it.quantity} onChange={(e)=>updateItem(it.id,{quantity: Number(e.target.value)})} />
+              <div className="md:col-span-2">
+                <div className="text-xs text-[var(--subtle)] mb-1">Od:</div>
+                <input type="date" className="input" value={it.startDate || ''} onChange={(e)=>updateItem(it.id,{startDate: e.target.value})} />
+              </div>
+              <div className="md:col-span-2">
+                <div className="text-xs text-[var(--subtle)] mb-1">Do:</div>
+                <input type="date" className="input" value={it.endDate || ''} onChange={(e)=>updateItem(it.id,{endDate: e.target.value})} />
+              </div>
+              <input
+                inputMode="decimal"
+                className="input md:col-span-1"
+                placeholder="Količina"
+                value={Number.isFinite(it.quantity) ? it.quantity : '' as any}
+                onChange={(e)=>{
+                  const v = e.target.value;
+                  const num = v==='' ? NaN : Number(v);
+                  updateItem(it.id,{quantity: num as any});
+                }}
+              />
               <div className="md:col-span-1">
-                <input type="number" className="input" placeholder="EUR" value={it.unitPrice} onChange={(e)=>updateItem(it.id,{unitPrice: Number(e.target.value)})} />
+                <input
+                  inputMode="decimal"
+                  className="input"
+                  placeholder="Cijena"
+                  value={Number.isFinite(it.unitPrice) ? it.unitPrice : '' as any}
+                  onChange={(e)=>{
+                    const v = e.target.value;
+                    const num = v==='' ? NaN : Number(v);
+                    updateItem(it.id,{unitPrice: num as any});
+                  }}
+                />
                 <div className="mt-1 text-xs text-[var(--subtle)]">{(it.quantity * it.unitPrice).toFixed(2)} EUR</div>
               </div>
               <button className="btn btn-danger text-xs md:col-span-10 md:justify-self-end" onClick={()=>removeItem(it.id)}>Ukloni</button>

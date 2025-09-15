@@ -3,15 +3,18 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useStore } from "@/store/useStore";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function Nav() {
   const { t, lang, setLang } = useI18n();
   const { theme, setTheme, companies, activeCompanyId, setActiveCompany } = useStore();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     function onDocClick(e: MouseEvent) {
       if (!open) return;
       const target = e.target as Node;
@@ -37,7 +40,7 @@ export default function Nav() {
           </svg>
         </button>
       </div>
-      {open && (
+      {open && mounted && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xl" onClick={()=>setOpen(false)}>
           <div ref={panelRef} className="w-[90vw] max-w-md card p-4" onClick={(e)=>e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
@@ -76,8 +79,8 @@ export default function Nav() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>, document.body)
+      }
     </nav>
   );
 }
