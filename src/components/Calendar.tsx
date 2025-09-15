@@ -24,9 +24,9 @@ export default function Calendar({ initial }: Props) {
   return (
     <div className="calendar card p-3">
       <div className="flex items-center justify-between mb-2">
-        <button className="btn btn-outline px-2 py-1" onClick={prevMonth} aria-label="Previous month">◀</button>
+        <button className="btn btn-outline px-2 py-1" onClick={prevMonth} aria-label="Previous month">‹</button>
         <div className="text-sm font-medium">{title}</div>
-        <button className="btn btn-outline px-2 py-1" onClick={nextMonth} aria-label="Next month">▶</button>
+        <button className="btn btn-outline px-2 py-1" onClick={nextMonth} aria-label="Next month">›</button>
       </div>
       <div className="grid grid-cols-7 text-xs text-[var(--subtle)] mb-1">
         {['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].map((d)=> (
@@ -80,7 +80,6 @@ function buildMatrix(y: number, m: number) {
   const weeks: typeof cells[] = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
-  const title = new Date(y, m, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' });
+  const title = new Date(y, m, 1).toLocaleString('bs-BA', { month: 'long', year: 'numeric' });
   return { weeks, title };
 }
-
