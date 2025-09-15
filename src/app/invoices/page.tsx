@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { useStore } from '@/store/useStore';
 import { calcInvoiceTotal } from '@/lib/models';
 import { useI18n } from '@/lib/i18n';
@@ -56,20 +56,20 @@ export default function InvoicesIndex() {
         </div>
       </div>
       <div className="grid md:grid-cols-5 gap-2 mb-4">
-        <select className="input" value={clientId} onChange={(e)=>setClientId(e.target.value)}>
+        <select className="input" value={clientId} onChange={(e: ChangeEvent<HTMLSelectElement>)=>setClientId(e.target.value)}>
           <option value="">{t('filter_client')}</option>
           {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select className="input" value={status} onChange={(e)=>setStatus(e.target.value as 'all'|'paid'|'unpaid')}>
+        <select className="input" value={status} onChange={(e: ChangeEvent<HTMLSelectElement>)=>setStatus(e.target.value as 'all'|'paid'|'unpaid')}>
           <option value="all">{t('status_all')}</option>
           <option value="paid">{t('status_paid')}</option>
           <option value="unpaid">{t('status_unpaid')}</option>
         </select>
-        <select className="input" value={year} onChange={(e)=>setYear(e.target.value)}>
+        <select className="input" value={year} onChange={(e: ChangeEvent<HTMLSelectElement>)=>setYear(e.target.value)}>
           <option value="">Godina</option>
           {years.map(y=> <option key={y} value={y}>{y}</option>)}
         </select>
-        <input className="input md:col-span-2" placeholder={t('search')} value={q} onChange={(e)=>setQ(e.target.value)} />
+        <input className="input md:col-span-2" placeholder={t('search')} value={q} onChange={(e: ChangeEvent<HTMLInputElement>)=>setQ(e.target.value)} />
       </div>
       <ul className="space-y-2">
         {filtered.map((inv)=> {

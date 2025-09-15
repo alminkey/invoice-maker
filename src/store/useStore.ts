@@ -67,59 +67,59 @@ export const useStore = create<Store>()(
           invoices: c?.invoices ?? [],
         });
       },
-      setProfile: (p) => set((s)=>{
+      setProfile: (p: CompanyProfile) => set((s)=>{
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, profile: p } : co);
         return { companies, profile: p };
       }),
-      addClient: (c) => set((s) => {
+      addClient: (c: Client) => set((s) => {
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, clients: [c, ...co.clients] } : co);
         return { companies, clients: [c, ...s.clients] };
       }),
-      updateClient: (c) => set((s) => {
+      updateClient: (c: Client) => set((s) => {
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, clients: co.clients.map(x=>x.id===c.id?c:x) } : co);
         return { companies, clients: s.clients.map(x=>x.id===c.id?c:x) };
       }),
-      removeClient: (id) => set((s) => {
+      removeClient: (id: string) => set((s) => {
         const active = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===active ? { ...co, clients: co.clients.filter(x=>x.id!==id) } : co);
         return { companies, clients: s.clients.filter(x=>x.id!==id) };
       }),
-      setClients: (arr) => set((s)=>{
+      setClients: (arr: Client[]) => set((s)=>{
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, clients: arr } : co);
         return { companies, clients: arr };
       }),
-      addInvoice: (i) => set((s) => {
+      addInvoice: (i: Invoice) => set((s) => {
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, invoices: [i, ...co.invoices] } : co);
         return { companies, invoices: [i, ...s.invoices] };
       }),
-      updateInvoice: (i) => set((s) => {
+      updateInvoice: (i: Invoice) => set((s) => {
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, invoices: co.invoices.map(x=>x.id===i.id?i:x) } : co);
         return { companies, invoices: s.invoices.map(x=>x.id===i.id?i:x) };
       }),
-      removeInvoice: (id) => set((s) => {
+      removeInvoice: (id: string) => set((s) => {
         const active = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===active ? { ...co, invoices: co.invoices.filter(x=>x.id!==id) } : co);
         return { companies, invoices: s.invoices.filter(x=>x.id!==id) };
       }),
-      setNumbering: (n) => set((s)=>{
+      setNumbering: (n: { prefix: string; next: number; lastYear?: number; resetYearly?: boolean }) => set((s)=>{
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, numbering: n } : co);
         return { companies, numbering: n };
       }),
-      setInvoices: (arr) => set((s)=>{
+      setInvoices: (arr: Invoice[]) => set((s)=>{
         const id = s.activeCompanyId;
         const companies = s.companies.map(co => co.id===id ? { ...co, invoices: arr } : co);
         return { companies, invoices: arr };
       }),
-      setUiLanguage: (lang) => set({ uiLanguage: lang }),
-      setTheme: (t) => set({ theme: t }),
-      addCompany: (p) => {
+      setUiLanguage: (lang: 'bs'|'nl'|'en'|'sk') => set({ uiLanguage: lang }),
+      setTheme: (t: 'dark'|'light') => set({ theme: t }),
+      addCompany: (p?: Partial<CompanyProfile>) => {
         const id = (Math.random().toString(36).slice(2) + Date.now().toString(36));
         const defaultNumbering = { prefix: `${(function(){
           const d = new Date();
@@ -157,7 +157,7 @@ export const useStore = create<Store>()(
         }
         return id;
       },
-      updateCompany: (id, patch) => set((s)=>{
+      updateCompany: (id: string, patch: Partial<Company>) => set((s)=>{
         const companies = s.companies.map(co => {
           if (co.id !== id) return co;
           const nextProfile = patch.profile ? { ...co.profile, ...patch.profile } : co.profile;
@@ -166,16 +166,16 @@ export const useStore = create<Store>()(
         });
         return { companies };
       }),
-      removeCompany: (id) => set((s)=>{
+      removeCompany: (id: string) => set((s)=>{
         const companies = s.companies.filter(co => co.id!==id);
         const activeCompanyId = s.activeCompanyId===id ? companies[0]?.id : s.activeCompanyId;
         return { companies, activeCompanyId };
       }),
-      setActiveCompany: (id) => { set({ activeCompanyId: id }); get()._syncFromActive?.(); },
+      setActiveCompany: (id: string) => { set({ activeCompanyId: id }); get()._syncFromActive?.(); },
     }),
     {
       name: 'invoice-maker-store',
-      onRehydrateStorage: () => (state, error) => {
+      onRehydrateStorage: () => (state: unknown, error?: unknown) => {
         try {
           const s = get();
           // migrate single-profile store to multi-company on first load

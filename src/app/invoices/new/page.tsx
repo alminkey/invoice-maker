@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { Invoice, InvoiceItem, calcInvoiceTotal } from '@/lib/models';
@@ -89,25 +89,25 @@ export default function NewInvoicePage() {
       <div className="card p-4 grid gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm text-[var(--subtle)] mb-1">Klijent</label>
-          <select className="input" value={clientId} onChange={(e)=>{ const v=e.target.value; setClientId(v); if (v) { const d = lastDescForClient(v); if (d && !items[0]?.description) { setItems((arr)=> arr.length? [{...arr[0], description: d}, ...arr.slice(1)] : [{ id: uid(), description: d, quantity:1, unitPrice:0, startDate:'', endDate:'' }]); } } }}>
+          <select className="input" value={clientId} onChange={(e: ChangeEvent<HTMLSelectElement>)=>{ const v=e.target.value; setClientId(v); if (v) { const d = lastDescForClient(v); if (d && !items[0]?.description) { setItems((arr)=> arr.length? [{...arr[0], description: d}, ...arr.slice(1)] : [{ id: uid(), description: d, quantity:1, unitPrice:0, startDate:'', endDate:'' }]); } } }}>
             <option value="">-- Odaberite klijenta --</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-sm text-[var(--subtle)] mb-1">Kompanija</label>
-          <select className="input" value={activeCompanyId || ''} onChange={(e)=>setActiveCompany(e.target.value)}>
+          <select className="input" value={activeCompanyId || ''} onChange={(e: ChangeEvent<HTMLSelectElement>)=>setActiveCompany(e.target.value)}>
             {companies.map(c=> <option key={c.id} value={c.id}>{c.profile.name}</option>)}
           </select>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-sm text-[var(--subtle)] mb-1">{t('date_issue')}</label>
-            <input type="date" className="input" value={issueDate} onChange={(e)=>setIssueDate(e.target.value)} />
+            <input type="date" className="input" value={issueDate} onChange={(e: ChangeEvent<HTMLInputElement>)=>setIssueDate(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm text-[var(--subtle)] mb-1">{t('date_due')}</label>
-            <input type="date" className="input" value={dueDate} onChange={(e)=>setDueDate(e.target.value)} />
+            <input type="date" className="input" value={dueDate} onChange={(e: ChangeEvent<HTMLInputElement>)=>setDueDate(e.target.value)} />
           </div>
         </div>
       </div>
@@ -117,21 +117,21 @@ export default function NewInvoicePage() {
         <div className="space-y-2">
           {items.map((it)=> (
             <div key={it.id} className="card p-3 grid md:grid-cols-10 gap-2 items-start">
-              <textarea className="input md:col-span-4" rows={4} placeholder="Opis" value={it.description} onChange={(e)=>updateItem(it.id,{description:e.target.value})} />
+              <textarea className="input md:col-span-4" rows={4} placeholder="Opis" value={it.description} onChange={(e: ChangeEvent<HTMLTextAreaElement>)=>updateItem(it.id,{description:e.target.value})} />
               <div className="md:col-span-2">
                 <div className="text-xs text-[var(--subtle)] mb-1">Od:</div>
-                <input type="date" className="input" value={it.startDate || ''} onChange={(e)=>updateItem(it.id,{startDate: e.target.value})} />
+                <input type="date" className="input" value={it.startDate || ''} onChange={(e: ChangeEvent<HTMLInputElement>)=>updateItem(it.id,{startDate: e.target.value})} />
               </div>
               <div className="md:col-span-2">
                 <div className="text-xs text-[var(--subtle)] mb-1">Do:</div>
-                <input type="date" className="input" value={it.endDate || ''} onChange={(e)=>updateItem(it.id,{endDate: e.target.value})} />
+                <input type="date" className="input" value={it.endDate || ''} onChange={(e: ChangeEvent<HTMLInputElement>)=>updateItem(it.id,{endDate: e.target.value})} />
               </div>
               <input
                 inputMode="decimal"
                 className="input md:col-span-1"
                 placeholder="Količina"
                 value={Number.isFinite(it.quantity) ? String(it.quantity) : ''}
-                onChange={(e)=>{
+                onChange={(e: ChangeEvent<HTMLInputElement>)=>{
                   const v = e.target.value;
                   const num = v==='' ? NaN : Number(v);
                   updateItem(it.id,{quantity: num});
@@ -143,7 +143,7 @@ export default function NewInvoicePage() {
                   className="input"
                   placeholder="Cijena"
                   value={Number.isFinite(it.unitPrice) ? String(it.unitPrice) : ''}
-                  onChange={(e)=>{
+                  onChange={(e: ChangeEvent<HTMLInputElement>)=>{
                     const v = e.target.value;
                     const num = v==='' ? NaN : Number(v);
                     updateItem(it.id,{unitPrice: num});
@@ -161,11 +161,11 @@ export default function NewInvoicePage() {
       <div className="mt-6 card p-4 grid md:grid-cols-3 gap-3 items-end">
         <div>
           <label className="block text-sm text-[var(--subtle)] mb-1">{t('deposit')}</label>
-          <input type="number" className="input" value={deposit} onChange={(e)=>setDeposit(Math.max(0, Number(e.target.value || 0)))} />
+          <input type="number" className="input" value={deposit} onChange={(e: ChangeEvent<HTMLInputElement>)=>setDeposit(Math.max(0, Number(e.target.value || 0)))} />
         </div>
         <div className="flex items-center gap-3 md:col-span-2">
           <label className="chip cursor-pointer select-none">
-            <input type="checkbox" className="mr-2" checked={depositEnabled} onChange={(e)=>setDepositEnabled(e.target.checked)} />{t('show_in_pdf')}
+            <input type="checkbox" className="mr-2" checked={depositEnabled} onChange={(e: ChangeEvent<HTMLInputElement>)=>setDepositEnabled(e.target.checked)} />{t('show_in_pdf')}
           </label>
           <div className="text-sm text-[var(--subtle)]">{t('total')}: {subtotal.toFixed(2)} EUR → {t('amount_due')}: {amountDue.toFixed(2)} EUR</div>
         </div>
@@ -176,23 +176,23 @@ export default function NewInvoicePage() {
         <div className="grid md:grid-cols-3 gap-3">
           <div>
             <label className="block text-sm text-[var(--subtle)] mb-1">{t('prefix')}</label>
-            <input className="input" placeholder="npr. 37-" value={numbering.prefix} onChange={(e)=>setNumbering({ ...numbering, prefix: e.target.value })} />
+            <input className="input" placeholder="npr. 37-" value={numbering.prefix} onChange={(e: ChangeEvent<HTMLInputElement>)=>setNumbering({ ...numbering, prefix: e.target.value })} />
           </div>
           <div>
             <label className="block text-sm text-[var(--subtle)] mb-1">{t('next_no')}</label>
-            <input type="number" className="input" value={numbering.next} onChange={(e)=>setNumbering({ ...numbering, next: Math.max(1, Number(e.target.value||1)) })} />
+            <input type="number" className="input" value={numbering.next} onChange={(e: ChangeEvent<HTMLInputElement>)=>setNumbering({ ...numbering, next: Math.max(1, Number(e.target.value||1)) })} />
           </div>
           <div className="text-sm text-[var(--subtle)] flex items-end">{t('format')}: {`${numbering.prefix || ''}${new Date().getFullYear()}-${String(numbering.next).padStart(4,'0')}`}</div>
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <input id="resetYearlyNew" type="checkbox" checked={!!numbering.resetYearly} onChange={(e)=>setNumbering({...numbering, resetYearly: e.target.checked})} />
+          <input id="resetYearlyNew" type="checkbox" checked={!!numbering.resetYearly} onChange={(e: ChangeEvent<HTMLInputElement>)=>setNumbering({...numbering, resetYearly: e.target.checked})} />
           <label htmlFor="resetYearlyNew" className="text-sm text-[var(--subtle)]">Resetuj serijski broj svake godine</label>
         </div>
       </div>
 
       <div className="mt-6">
         <label className="block text-sm text-[var(--subtle)] mb-1">Napomena</label>
-        <textarea className="input" rows={3} value={notes} onChange={(e)=>setNotes(e.target.value)} />
+        <textarea className="input" rows={3} value={notes} onChange={(e: ChangeEvent<HTMLTextAreaElement>)=>setNotes(e.target.value)} />
       </div>
 
       <div className="mt-4">
@@ -203,4 +203,3 @@ export default function NewInvoicePage() {
     </main>
   );
 }
-
