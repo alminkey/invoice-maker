@@ -177,7 +177,7 @@ export const useStore = create<Store>()(
       name: 'invoice-maker-store',
       onRehydrateStorage: () => () => {
         try {
-          const s = get();
+          const s = useStore.getState();
           // migrate single-profile store to multi-company on first load
           if (s && s.companies && s.companies.length === 0 && (s.profile || (s.clients && s.clients.length) || (s.invoices && s.invoices.length))) {
             const id = (Math.random().toString(36).slice(2) + Date.now().toString(36));
@@ -188,10 +188,10 @@ export const useStore = create<Store>()(
               clients: s.clients,
               invoices: s.invoices,
             };
-            set({ companies: [co], activeCompanyId: id });
-            get()._syncFromActive?.();
+            useStore.setState({ companies: [co], activeCompanyId: id });
+            useStore.getState()._syncFromActive?.();
           } else {
-            get()._syncFromActive?.();
+            useStore.getState()._syncFromActive?.();
           }
         } catch {}
       }
