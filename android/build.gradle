@@ -1,24 +1,7 @@
-// Top-level build file; Android Studio will generate/update Gradle wrapper on sync
+// Top-level build file for the Android project.
+// Repositories are defined in settings.gradle (dependencyResolutionManagement).
+// Keep this file minimal for AGP 8+.
 
-buildscript {
-  repositories {
-    google()
-    mavenCentral()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle:8.6.0'
-    classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24'
-  }
+tasks.register("clean", Delete) {
+  delete(rootProject.buildDir)
 }
-
-allprojects {
-  repositories {
-    google()
-    mavenCentral()
-  }
-}
-
-task clean(type: Delete) {
-  delete rootProject.buildDir
-}
-
