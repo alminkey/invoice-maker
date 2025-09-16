@@ -37,4 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ---
 
-Chore: trigger Vercel deploy.
+Chore: trigger Vercel deploy (2).
