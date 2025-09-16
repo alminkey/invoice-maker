@@ -9,7 +9,7 @@ import androidx.activity.ComponentActivity
 
 class MainActivity : ComponentActivity() {
   private lateinit var webView: WebView
-  private val startUrl = "https://invoice-maker-git-main-alminkeys-projects.vercel.app" // TODO: set your deployed URL
+  private val startUrl = "https://invoice-maker-2drs.vercel.app"
 
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
