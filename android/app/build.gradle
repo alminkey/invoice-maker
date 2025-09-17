@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-  namespace 'com.alminkey.invoicemobile'
+  namespace 'com.vaico.invoicemobile'
   compileSdk 34
 
   defaultConfig {
-    applicationId "com.alminkey.invoice"
+    applicationId "com.vaico.invoicemaker"
     minSdk 26
     targetSdk 34
     versionCode 1
