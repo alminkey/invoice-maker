@@ -3,6 +3,7 @@ package com.vaico.invoicemobile
 import android.annotation.SuppressLint
 import android.Manifest
 import android.app.DownloadManager
+import android.content.ContentValues
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -10,10 +11,15 @@ import android.webkit.*
 import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import android.util.Base64
 import android.content.pm.PackageManager
 import android.os.Environment
 import android.widget.Toast
 import android.webkit.URLUtil
+import android.provider.MediaStore
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 
 class MainActivity : ComponentActivity() {
   private lateinit var webView: WebView
@@ -48,11 +54,39 @@ class MainActivity : ComponentActivity() {
       }
     }
 
+    // JS bridge for blob/data downloads
+    webView.addJavascriptInterface(AndroidDownloader(), "AndroidDownloader")
+
     // Handle downloads initiated from <a download> or Content-Disposition
     webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
       try {
+        // Handle data: and blob: specially
+        if (url.startsWith("data:")) {
+          saveDataUrl(url, URLUtil.guessFileName("download", contentDisposition, mimeType), mimeType)
+          return@setDownloadListener
+        }
         if (url.startsWith("blob:")) {
-          Toast.makeText(this, "This download type isn't supported yet (blob:).", Toast.LENGTH_LONG).show()
+          val safeName = URLUtil.guessFileName("download", contentDisposition, mimeType)
+          val escapedUrl = url.replace("'", "\\'")
+          val escapedName = safeName.replace("'", "\\'")
+          val escapedMime = (mimeType ?: "application/octet-stream").replace("'", "\\'")
+          val js = """
+            (function(){
+              try {
+                var u = '$escapedUrl';
+                var name = '$escapedName';
+                var mime = '$escapedMime';
+                fetch(u).then(function(res){return res.blob()}).then(function(blob){
+                  var reader = new FileReader();
+                  reader.onloadend = function(){
+                    try { window.AndroidDownloader.downloadBase64(name, String(reader.result), blob.type || mime); } catch(e){ window.AndroidDownloader.error(String(e)); }
+                  };
+                  reader.readAsDataURL(blob);
+                }).catch(function(e){ window.AndroidDownloader.error(String(e)); });
+              } catch(e) { window.AndroidDownloader.error(String(e)); }
+            })();
+          """.trimIndent()
+          webView.evaluateJavascript(js, null)
           return@setDownloadListener
         }
 
@@ -102,6 +136,64 @@ class MainActivity : ComponentActivity() {
 
   override fun onBackPressed() {
     if (this::webView.isInitialized && webView.canGoBack()) webView.goBack() else super.onBackPressed()
+  }
+
+  // JS bridge class
+  inner class AndroidDownloader {
+    @JavascriptInterface
+    fun downloadBase64(name: String?, dataUrl: String, mime: String?) {
+      runOnUiThread {
+        try {
+          val filename = (name?.ifBlank { null } ?: "download-${System.currentTimeMillis()}")
+          saveDataUrl(dataUrl, filename, mime)
+          Toast.makeText(this@MainActivity, "Downloading…", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+          Toast.makeText(this@MainActivity, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+      }
+    }
+
+    @JavascriptInterface
+    fun error(msg: String?) {
+      runOnUiThread { Toast.makeText(this@MainActivity, "Download error: ${msg ?: "unknown"}", Toast.LENGTH_LONG).show() }
+    }
+  }
+
+  private fun saveDataUrl(dataUrl: String, defaultName: String, mimeMaybe: String?) {
+    val comma = dataUrl.indexOf(',')
+    if (!dataUrl.startsWith("data:") || comma < 0) throw IllegalArgumentException("Not a data: URL")
+    val meta = dataUrl.substring(5, comma) // e.g. application/pdf;base64
+    val base64 = dataUrl.substring(comma + 1)
+    val mime = meta.substringBefore(';', missingDelimiterValue = (mimeMaybe ?: "application/octet-stream"))
+    val bytes = Base64.decode(base64, Base64.DEFAULT)
+    saveBytes(bytes, defaultName, mime)
+  }
+
+  private fun saveBytes(bytes: ByteArray, name: String, mime: String) {
+    if (Build.VERSION.SDK_INT >= 29) {
+      val values = ContentValues().apply {
+        put(MediaStore.Downloads.DISPLAY_NAME, name)
+        put(MediaStore.Downloads.MIME_TYPE, mime)
+        put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        put(MediaStore.Downloads.IS_PENDING, 1)
+      }
+      val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+        ?: throw IllegalStateException("Failed to create download entry")
+      contentResolver.openOutputStream(uri).use { out ->
+        if (out == null) throw IllegalStateException("No output stream")
+        out.write(bytes)
+      }
+      values.clear()
+      values.put(MediaStore.Downloads.IS_PENDING, 0)
+      contentResolver.update(uri, values, null, null)
+    } else {
+      val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+      if (!granted) throw SecurityException("Storage permission not granted")
+      val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+      if (!dir.exists()) dir.mkdirs()
+      val file = File(dir, name)
+      FileOutputStream(file).use { it.write(bytes) }
+    }
   }
 }
 
