@@ -27,12 +27,19 @@ export default function InvoiceDetailPage() {
 
   const onDownload = async () => {
     const blob = await pdf(<InvoicePdf profile={profile} client={client} invoice={invoice} labels={labels} />).toBlob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${invoice.number ?? `invoice-${invoice.id}`}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const name = `${invoice.number ?? `invoice-${invoice.id}`}.pdf`;
+    const android = (globalThis as any).AndroidDownloader;
+    if (android && typeof android.downloadBase64 === 'function') {
+      const b64 = await new Promise<string>((resolve)=>{ const fr=new FileReader(); fr.onload=()=>resolve(String(fr.result)); fr.readAsDataURL(blob); });
+      android.downloadBase64(name, b64, blob.type);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const onPreview = async () => {
@@ -45,12 +52,19 @@ export default function InvoiceDetailPage() {
     for (const l of langs) {
       const lab = i18nLabels[l];
       const blob = await pdf(<InvoicePdf profile={profile} client={client} invoice={invoice} labels={lab} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${invoice.number ?? `invoice-${invoice.id}`}-${l}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const name = `${invoice.number ?? `invoice-${invoice.id}`}-${l}.pdf`;
+      const android = (globalThis as any).AndroidDownloader;
+      if (android && typeof android.downloadBase64 === 'function') {
+        const b64 = await new Promise<string>((resolve)=>{ const fr=new FileReader(); fr.onload=()=>resolve(String(fr.result)); fr.readAsDataURL(blob); });
+        android.downloadBase64(name, b64, blob.type);
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
   };
 

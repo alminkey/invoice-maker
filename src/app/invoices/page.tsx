@@ -37,13 +37,20 @@ export default function InvoicesIndex() {
       zip.file(name, blob);
     }
     const out = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(out);
-    const a = document.createElement('a');
-    a.href = url;
-    const label = `${clientId ? (clients.find(c=>c.id===clientId)?.name || 'client') : 'all'}-${year || 'all'}`;
-    a.download = `invoices-${label}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const nameBase = `${clientId ? (clients.find(c=>c.id===clientId)?.name || 'client') : 'all'}-${year || 'all'}`;
+    const name = `invoices-${nameBase}.zip`;
+    const android = (globalThis as any).AndroidDownloader;
+    if (android && typeof android.downloadBase64 === 'function') {
+      const b64 = await new Promise<string>((resolve)=>{ const fr=new FileReader(); fr.onload=()=>resolve(String(fr.result)); fr.readAsDataURL(out); });
+      android.downloadBase64(name, b64, 'application/zip');
+    } else {
+      const url = URL.createObjectURL(out);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (

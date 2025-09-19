@@ -39,7 +39,7 @@ export default function SettingsPage() {
     setProfile(form);
   };
 
-  const exportJson = () => {
+  const exportJson = async () => {
     const payload = {
       version: 1,
       exportedAt: new Date().toISOString(),
@@ -49,12 +49,19 @@ export default function SettingsPage() {
       invoices,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'invoice-maker-backup.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    const name = 'invoice-maker-backup.json';
+    const android = (globalThis as any).AndroidDownloader;
+    if (android && typeof android.downloadBase64 === 'function') {
+      const b64 = await new Promise<string>((resolve)=>{ const fr=new FileReader(); fr.onload=()=>resolve(String(fr.result)); fr.readAsDataURL(blob); });
+      android.downloadBase64(name, b64, 'application/json');
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const importJson = (file: File) => {
