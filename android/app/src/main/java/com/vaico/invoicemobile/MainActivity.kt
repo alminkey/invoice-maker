@@ -52,6 +52,36 @@ class MainActivity : ComponentActivity() {
         if (Uri.parse(url).scheme?.startsWith("http") == true) return false
         return true
       }
+      override fun onPageFinished(view: WebView?, url: String?) {
+        super.onPageFinished(view, url)
+        // Install a hook to capture blobs created via URL.createObjectURL
+        val hook = """
+          (function(){
+            try {
+              if (window.__blobHookInstalled) return;
+              window.__blobMap = new Map();
+              var orig = URL.createObjectURL;
+              URL.createObjectURL = function(blob){
+                var u = orig.call(URL, blob);
+                try {
+                  var r = new FileReader();
+                  r.onloadend = function(){ try{ window.__blobMap.set(u, String(r.result)); }catch(_){} };
+                  r.readAsDataURL(blob);
+                } catch(_){ }
+                return u;
+              };
+              window.__blob2data = function(u){
+                return new Promise(function(res, rej){
+                  try { var v = window.__blobMap && window.__blobMap.get(u); if (v) res(v); else rej('not found'); }
+                  catch(e){ rej(String(e)); }
+                });
+              };
+              window.__blobHookInstalled = true;
+            } catch(_){ }
+          })();
+        """.trimIndent()
+        view?.evaluateJavascript(hook, null)
+      }
     }
 
     // JS bridge for blob/data downloads
@@ -70,35 +100,30 @@ class MainActivity : ComponentActivity() {
           val escapedUrl = url.replace("'", "\\'")
           val escapedName = safeName.replace("'", "\\'")
           val escapedMime = (mimeType ?: "application/octet-stream").replace("'", "\\'")
-          val js = """
+          val jsMapFirst = """
             (function(){
-              var u = '$escapedUrl';
-              var name = '$escapedName';
-              var mime = '$escapedMime';
-              function sendError(e){ try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
-              function sendBlob(blob){
-                try {
-                  var r = new FileReader();
-                    r.onloadend = function(){
-                      try{ window.AndroidDownloader.downloadBase64(name, String(r.result), blob.type || mime); }catch(e){ sendError(e); }
-                    };
-                    r.readAsDataURL(blob);
-                } catch (e){ sendError(e); }
-              }
+              var u = '$escapedUrl'; var name='$escapedName'; var mime='$escapedMime';
               try {
-                fetch(u).then(function(res){ return res.blob(); }).then(sendBlob).catch(function(){
-                  try {
-                    var xhr = new XMLHttpRequest();
-                    xhr.responseType = 'blob';
-                    xhr.onload = function(){ sendBlob(xhr.response); };
-                    xhr.onerror = function(){ sendError('XHR failed'); };
-                    xhr.open('GET', u, true); xhr.send();
-                  } catch (ee) { sendError(ee); }
-                });
-              } catch(e) { sendError(e); }
+                if (window.__blob2data) {
+                  window.__blob2data(u).then(function(d){ window.AndroidDownloader.downloadBase64(name, d, mime); })
+                  .catch(function(){ window.AndroidDownloader.error('map miss'); });
+                } else {
+                  window.AndroidDownloader.error('no hook');
+                }
+              } catch(e) { try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
             })();
           """.trimIndent()
-          webView.evaluateJavascript(js, null)
+          webView.evaluateJavascript(jsMapFirst, null)
+          // Also try fetch/XHR fallback in background
+          val jsFallback = """
+            (function(){
+              var u = '$escapedUrl'; var name='$escapedName'; var mime='$escapedMime';
+              function sendError(e){ try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
+              function sendBlob(blob){ try{ var r=new FileReader(); r.onloadend=function(){ try{ window.AndroidDownloader.downloadBase64(name,String(r.result), blob.type||mime);}catch(e){sendError(e);} }; r.readAsDataURL(blob);}catch(e){sendError(e);} }
+              try{ fetch(u).then(function(r){return r.blob()}).then(sendBlob).catch(function(){ try{ var x=new XMLHttpRequest(); x.responseType='blob'; x.onload=function(){ sendBlob(x.response); }; x.onerror=function(){ sendError('XHR failed'); }; x.open('GET',u,true); x.send(); }catch(e){ sendError(e); } }); }catch(e){ sendError(e); }
+            })();
+          """.trimIndent()
+          webView.evaluateJavascript(jsFallback, null)
           return@setDownloadListener
         }
 
