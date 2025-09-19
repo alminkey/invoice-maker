@@ -103,14 +103,18 @@ class MainActivity : ComponentActivity() {
           val jsMapFirst = """
             (function(){
               var u = '$escapedUrl'; var name='$escapedName'; var mime='$escapedMime';
-              try {
-                if (window.__blob2data) {
-                  window.__blob2data(u).then(function(d){ window.AndroidDownloader.downloadBase64(name, d, mime); })
-                  .catch(function(){ window.AndroidDownloader.error('map miss'); });
-                } else {
-                  window.AndroidDownloader.error('no hook');
-                }
-              } catch(e) { try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
+              var tries = 0;
+              function tryGet(){
+                try {
+                  if (window.__blob2data) {
+                    window.__blob2data(u).then(function(d){ window.AndroidDownloader.downloadBase64(name, d, mime); })
+                    .catch(function(){ if (tries++ < 40) setTimeout(tryGet, 50); else window.AndroidDownloader.error('map timeout'); });
+                  } else {
+                    if (tries++ < 20) setTimeout(tryGet, 100); else window.AndroidDownloader.error('no hook');
+                  }
+                } catch(e) { try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
+              }
+              tryGet();
             })();
           """.trimIndent()
           webView.evaluateJavascript(jsMapFirst, null)
