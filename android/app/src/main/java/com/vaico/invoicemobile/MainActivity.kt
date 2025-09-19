@@ -50,30 +50,44 @@ class MainActivity : ComponentActivity() {
 
     // Handle downloads initiated from <a download> or Content-Disposition
     webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
-      // Permission for API < 29
-      if (Build.VERSION.SDK_INT < 29) {
-        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        if (!granted) {
-          ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQ_WRITE_EXTERNAL)
-          Toast.makeText(this, "Permission needed to save file. Tap download again.", Toast.LENGTH_SHORT).show()
+      try {
+        if (url.startsWith("blob:")) {
+          Toast.makeText(this, "This download type isn't supported yet (blob:).", Toast.LENGTH_LONG).show()
           return@setDownloadListener
         }
+
+        // Permission for API < 29
+        if (Build.VERSION.SDK_INT < 29) {
+          val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+          if (!granted) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQ_WRITE_EXTERNAL)
+            Toast.makeText(this, "Permission needed to save file. Tap download again.", Toast.LENGTH_SHORT).show()
+            return@setDownloadListener
+          }
+        }
+
+        val filename = URLUtil.guessFileName(url, contentDisposition, mimeType)
+        val request = DownloadManager.Request(Uri.parse(url))
+          .setMimeType(mimeType)
+          .setTitle(filename)
+          .setDescription("Downloading file")
+          .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+
+        if (Build.VERSION.SDK_INT >= 29) {
+          request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, filename)
+        } else {
+          request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
+        }
+
+        CookieManager.getInstance().getCookie(url)?.let { request.addRequestHeader("cookie", it) }
+        request.addRequestHeader("User-Agent", userAgent)
+
+        val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        dm.enqueue(request)
+        Toast.makeText(this, "Downloading…", Toast.LENGTH_SHORT).show()
+      } catch (e: Exception) {
+        Toast.makeText(this, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
       }
-
-      val filename = URLUtil.guessFileName(url, contentDisposition, mimeType)
-      val request = DownloadManager.Request(Uri.parse(url))
-        .setMimeType(mimeType)
-        .setTitle(filename)
-        .setDescription("Downloading file")
-        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
-
-      CookieManager.getInstance().getCookie(url)?.let { request.addRequestHeader("cookie", it) }
-      request.addRequestHeader("User-Agent", userAgent)
-
-      val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-      dm.enqueue(request)
-      Toast.makeText(this, "Downloading…", Toast.LENGTH_SHORT).show()
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
