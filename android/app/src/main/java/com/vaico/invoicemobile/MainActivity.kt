@@ -104,7 +104,14 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-    registerReceiver(dmReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+    try {
+      val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+      if (Build.VERSION.SDK_INT >= 33) {
+        registerReceiver(dmReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+      } else {
+        registerReceiver(dmReceiver, filter)
+      }
+    } catch (_: Exception) { /* ignore receiver issues */ }
 
     // Handle downloads initiated from <a download> or Content-Disposition
     webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
@@ -193,6 +200,7 @@ class MainActivity : ComponentActivity() {
   override fun onDestroy() {
     super.onDestroy()
     dmReceiver?.let { try { unregisterReceiver(it) } catch (_: Exception) {} }
+    dmReceiver = null
   }
 
   // JS bridge class
