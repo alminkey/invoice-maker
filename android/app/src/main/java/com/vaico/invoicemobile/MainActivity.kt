@@ -72,18 +72,30 @@ class MainActivity : ComponentActivity() {
           val escapedMime = (mimeType ?: "application/octet-stream").replace("'", "\\'")
           val js = """
             (function(){
+              var u = '$escapedUrl';
+              var name = '$escapedName';
+              var mime = '$escapedMime';
+              function sendError(e){ try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
+              function sendBlob(blob){
+                try {
+                  var r = new FileReader();
+                    r.onloadend = function(){
+                      try{ window.AndroidDownloader.downloadBase64(name, String(r.result), blob.type || mime); }catch(e){ sendError(e); }
+                    };
+                    r.readAsDataURL(blob);
+                } catch (e){ sendError(e); }
+              }
               try {
-                var u = '$escapedUrl';
-                var name = '$escapedName';
-                var mime = '$escapedMime';
-                fetch(u).then(function(res){return res.blob()}).then(function(blob){
-                  var reader = new FileReader();
-                  reader.onloadend = function(){
-                    try { window.AndroidDownloader.downloadBase64(name, String(reader.result), blob.type || mime); } catch(e){ window.AndroidDownloader.error(String(e)); }
-                  };
-                  reader.readAsDataURL(blob);
-                }).catch(function(e){ window.AndroidDownloader.error(String(e)); });
-              } catch(e) { window.AndroidDownloader.error(String(e)); }
+                fetch(u).then(function(res){ return res.blob(); }).then(sendBlob).catch(function(){
+                  try {
+                    var xhr = new XMLHttpRequest();
+                    xhr.responseType = 'blob';
+                    xhr.onload = function(){ sendBlob(xhr.response); };
+                    xhr.onerror = function(){ sendError('XHR failed'); };
+                    xhr.open('GET', u, true); xhr.send();
+                  } catch (ee) { sendError(ee); }
+                });
+              } catch(e) { sendError(e); }
             })();
           """.trimIndent()
           webView.evaluateJavascript(js, null)
