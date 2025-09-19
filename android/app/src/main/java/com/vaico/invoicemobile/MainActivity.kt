@@ -3,6 +3,9 @@ package com.vaico.invoicemobile
 import android.annotation.SuppressLint
 import android.Manifest
 import android.app.DownloadManager
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.ContentValues
 import android.net.Uri
 import android.os.Build
@@ -25,6 +28,8 @@ class MainActivity : ComponentActivity() {
   private lateinit var webView: WebView
   private val startUrl = "https://invoice-maker-2drs.vercel.app"
   private val REQ_WRITE_EXTERNAL = 1001
+  private val dmIds: MutableMap<Long, String> = mutableMapOf()
+  private var dmReceiver: BroadcastReceiver? = null
 
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +91,20 @@ class MainActivity : ComponentActivity() {
 
     // JS bridge for blob/data downloads
     webView.addJavascriptInterface(AndroidDownloader(), "AndroidDownloader")
+
+    // Listen for DownloadManager completion to show success toast
+    dmReceiver = object : BroadcastReceiver() {
+      override fun onReceive(context: android.content.Context?, intent: Intent?) {
+        if (intent?.action == DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
+          val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+          val name = dmIds.remove(id)
+          if (name != null) {
+            Toast.makeText(this@MainActivity, "Saved to Downloads: $name", Toast.LENGTH_LONG).show()
+          }
+        }
+      }
+    }
+    registerReceiver(dmReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
     // Handle downloads initiated from <a download> or Content-Disposition
     webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
@@ -149,7 +168,8 @@ class MainActivity : ComponentActivity() {
         request.addRequestHeader("User-Agent", userAgent)
 
         val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-        dm.enqueue(request)
+        val id = dm.enqueue(request)
+        dmIds[id] = filename
         Toast.makeText(this, "Downloading…", Toast.LENGTH_SHORT).show()
       } catch (e: Exception) {
         Toast.makeText(this, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
@@ -170,6 +190,11 @@ class MainActivity : ComponentActivity() {
     if (this::webView.isInitialized && webView.canGoBack()) webView.goBack() else super.onBackPressed()
   }
 
+  override fun onDestroy() {
+    super.onDestroy()
+    dmReceiver?.let { try { unregisterReceiver(it) } catch (_: Exception) {} }
+  }
+
   // JS bridge class
   inner class AndroidDownloader {
     @JavascriptInterface
@@ -178,7 +203,7 @@ class MainActivity : ComponentActivity() {
         try {
           val filename = (name?.ifBlank { null } ?: "download-${System.currentTimeMillis()}")
           saveDataUrl(dataUrl, filename, mime)
-          Toast.makeText(this@MainActivity, "Downloading…", Toast.LENGTH_SHORT).show()
+          Toast.makeText(this@MainActivity, "Saved to Downloads: $filename", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
           Toast.makeText(this@MainActivity, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
         }
