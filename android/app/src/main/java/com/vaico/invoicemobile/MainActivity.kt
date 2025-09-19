@@ -118,16 +118,7 @@ class MainActivity : ComponentActivity() {
             })();
           """.trimIndent()
           webView.evaluateJavascript(jsMapFirst, null)
-          // Also try fetch/XHR fallback in background
-          val jsFallback = """
-            (function(){
-              var u = '$escapedUrl'; var name='$escapedName'; var mime='$escapedMime';
-              function sendError(e){ try{ window.AndroidDownloader.error(String(e)); }catch(_){} }
-              function sendBlob(blob){ try{ var r=new FileReader(); r.onloadend=function(){ try{ window.AndroidDownloader.downloadBase64(name,String(r.result), blob.type||mime);}catch(e){sendError(e);} }; r.readAsDataURL(blob);}catch(e){sendError(e);} }
-              try{ fetch(u).then(function(r){return r.blob()}).then(sendBlob).catch(function(){ try{ var x=new XMLHttpRequest(); x.responseType='blob'; x.onload=function(){ sendBlob(x.response); }; x.onerror=function(){ sendError('XHR failed'); }; x.open('GET',u,true); x.send(); }catch(e){ sendError(e); } }); }catch(e){ sendError(e); }
-            })();
-          """.trimIndent()
-          webView.evaluateJavascript(jsFallback, null)
+          // No network fallback here; rely on cached dataURL to avoid crashes in older WebViews
           return@setDownloadListener
         }
 
